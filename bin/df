@@ -1,0 +1,28 @@
+-- because bug with string.format in luaJ according to http://www.computercraft.info/forums2/index.php?/topic/6965-146sspsmp-stringformat-behaves-incorrectly-with-widthprecisions/ we need to do it ourself
+-- TODO: check textutils
+function padString(text, n)
+	ret = text
+	for i= 1, n - #text do
+		ret = " "..ret
+	end
+	return ret
+end
+
+function printSizes(folder)
+	if not fs.exists(folder) then return end
+	local drive = fs.getDrive(folder)
+	print(string.format("%8s %10i %7s", padString(drive, 8), fs.getFreeSpace(folder), padString(tostring(not fs.isReadOnly(drive)), 7) ))
+end
+
+
+
+print(string.format("%8s %10s %7s", padString("device", 8), padString("free", 10), padString("w+", 7)))
+printSizes("/")
+printSizes("/rom/")
+printSizes("/disk/")
+-- just in case...
+printSizes("/disk2")
+printSizes("/disk3")
+printSizes("/disk4")
+printSizes("/disk5")
+printSizes("/disk6")

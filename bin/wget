@@ -1,0 +1,53 @@
+-- TODO:
+-- - USAGE
+-- - Multiple arguments (don't overwrite)
+-- - relative path support
+
+local args = { ... }
+local url, saveTo, exec
+local d
+
+if #args == 0 then
+  print("You need to supply at least an url.")
+  return
+elseif #args == 3 then
+  print("with arg")
+  exec = args[1] == "-e"
+  url, saveTo = args[2], args[3]
+else
+  url = args[1]
+  if #args == 2 then saveTo = args[2]
+  else saveTo = "-" end
+end
+
+
+print("Request "..url)
+sfd = http.get(url) -- why the fuck does get send post requests ? oO
+if sfd == nil or sfd == false then
+  print("Probleme fetching ressource "..url)
+  return
+end
+
+d = sfd.readAll()
+sfd.close()
+if saveTo == "-" then
+  print(d)
+else
+  local fd = fs.open(saveTo, "w")
+  fd.write(d)
+  fd.close()
+end
+
+if exec then
+  -- this part is pretty ugly, but works so far
+  -- TODO exit after x tries
+  local tmp = "/tmp"
+  while fs.exists(tmp) do
+    tmp = tmp.."_" -- is there a rand function ?
+  end
+  shell.run(tmp)
+  fs.delete(tmp)
+end
+
+
+

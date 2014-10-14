@@ -1,0 +1,155 @@
+--[[
+Author: SleepGamer
+Licence: As long as you retain this notice you can do whatever you want with this stuff.
+		If we meet some day, and you think this stuff is worth it, you can drop some items for me.
+]]--
+
+local bx, by, bz = {0, 0, 0}
+local brx, bry, brz = {0, 0, 0}
+doAutoFuel = true
+
+--[[
+	{{type, amount}, ..}
+	where type is:
+	- 0	up/down
+	- 1 left/right
+	- 2 rotate left/right
+]]--
+local crumbs = {}
+
+function setCrumbs(newCrumbs)
+	local t = crumbs
+	crumbs = newCrumbs
+	return t
+end
+
+function getCrumbCount()
+	return #crumbs
+end
+
+function _appendCrumb(crumb)
+	local last = table.getn(crumbs)
+	--print("crumbsize: "..last)
+	if last < 1 then
+		table.insert(crumbs, crumb)
+		return
+	end
+	last = crumbs[last]
+	if last[1] == crumb[1] then
+		if last[1] == 3 or last[1] == 2 then
+			last[2] = (last[2]+crumb[2]) % 4
+		else
+			last[2] = last[2]+crumb[2]
+		end
+		if last[2] == 0 then
+			table.remove(crumbs)
+		end
+	else
+		table.insert(crumbs, crumb)
+	end
+end
+
+function step_back()
+	local last = table.getn(crumbs)
+	if last == 0 then
+		return false
+	end
+	last = crumbs[last]
+	local foo
+	if last[1] == 0 then
+		if last[2] < 0 then foo = up()
+		else foo = down() end
+	elseif last[1] == 1 then
+		if last[2] < 0 then foo = forward()
+		else foo = back() end
+	elseif last[1] == 2 then
+		if last[2] < 0 then foo = turnLeft()
+		else foo = turnRight() end
+	end
+	return foo
+end
+
+function followTrailHome()
+	-- TODO retry up to x times if error but #crumbs > 0
+	while step_back() do end
+end
+
+function _auto_fuel()
+	for i=1,16 do
+		turtle.select(i)
+		if turtle.refuel(1) then return true end
+	end
+end
+
+function down()
+	if turtle.getFuelLevel() < 2 and doAutoFuel then _auto_fuel() end
+	s = turtle.down()
+	if s then
+		_appendCrumb({0, -1})
+	end
+	return s
+end
+
+function up()
+	if turtle.getFuelLevel() < 2 and doAutoFuel then _auto_fuel() end
+	s = turtle.up()
+	if s then
+		_appendCrumb({0, 1})
+	end
+	return s
+end
+
+function forward()
+	if turtle.getFuelLevel() < 2 and doAutoFuel then _auto_fuel() end
+	s = turtle.forward()
+	if s then
+		_appendCrumb({1, 1})
+	end
+	return s
+end
+
+function back()
+	if turtle.getFuelLevel() < 2 and doAutoFuel then _auto_fuel() end
+	s = turtle.back()
+	if s then
+		_appendCrumb({1, -1})
+	end
+	return s
+end
+
+function turnLeft()
+	if turtle.getFuelLevel() < 2 and doAutoFuel then _auto_fuel() end
+	s = turtle.turnLeft()
+	if s then
+		_appendCrumb({2, 1})
+	end
+	return s
+end
+
+function turnRight()
+	if turtle.getFuelLevel() < 2 and doAutoFuel then _auto_fuel() end
+	s = turtle.turnRight()
+	if s then
+		_appendCrumb({2, -1})
+	end
+	return s
+end
+
+--[[
+up()
+back()
+turnLeft()
+turnLeft()
+turnLeft()
+turnLeft()
+turnLeft()
+back()
+up()
+turnRight()
+forward()
+up()
+turnLeft()
+while step_back() do
+	print("step back")
+end
+]]--
